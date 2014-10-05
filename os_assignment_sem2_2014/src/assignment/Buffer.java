@@ -7,24 +7,52 @@ public class Buffer {
 
 	public static Random RAN = new Random();
 	public static int THREAD_ID = 0;
-	public static boolean[] BUFFER_ITEM = new boolean[10];
-	public static int INDEX;
+	public static int[] BUFFER_ITEM = new int[10];
 
 	public Buffer() {
-		INDEX = 0;
+		// INDEX = 0;
+	}
+
+	public static void insert_item(int element) {
+		boolean isInserted = false;
+		for (int i = 0; i < BUFFER_ITEM.length; i++) {
+			if (BUFFER_ITEM[i] == 0) {
+				BUFFER_ITEM[i] = element;
+				isInserted = true;
+				System.out.println("Inserted " + element + " at " + i);
+				break;
+			}
+		}
+		if (!isInserted)
+			System.out.println("The queue is full");
+	}
+
+	public static int remove_item() {
+		int item = 0;
+		for (int i = 0; i < BUFFER_ITEM.length; i++) {
+			if (BUFFER_ITEM[i] != 0) {
+				item = BUFFER_ITEM[i];
+				BUFFER_ITEM[i] = 0;
+				System.out.println("removed " + item + " at " + i);
+				return item;
+			}
+		}
+		System.out.println("The queue is empty");
+		return 0;
 	}
 
 	public static void createProducerThread() {
-		System.out.println("T" + THREAD_ID++);
+		System.out.println("T " + THREAD_ID++);
 		Thread temp = new Thread() {
 			int threadNum = THREAD_ID;
 
 			public void run() {
 				while (true) {
-					System.out.println("Prodcuder thread " + threadNum
-							+ "is running");
+					System.out.println("Prodcuder thread " + threadNum);
 					try {
 						sleep(Buffer.RAN.nextInt(10000));
+						int item = Buffer.RAN.nextInt(100) + 1;
+						Buffer.insert_item(item);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -35,17 +63,17 @@ public class Buffer {
 	}
 
 	public static void createCosumerThread() {
-		System.out.println("C" + THREAD_ID++);
+		System.out.println("C " + THREAD_ID++);
 		Thread temp = new Thread() {
+			int threadNum = THREAD_ID;
+
 			public void run() {
-				int threadNum = THREAD_ID;
 				while (true) {
-					System.out.println("Consumer thread " + threadNum
-							+ " is running");
+					System.out.println("Consumer thread " + threadNum);
 					try {
 						sleep(Buffer.RAN.nextInt(10000));
+						Buffer.remove_item();
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
