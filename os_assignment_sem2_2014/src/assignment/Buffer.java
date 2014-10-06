@@ -2,42 +2,77 @@ package assignment;
 
 import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.Semaphore;
+
+/**
+ * Buffer class to simulate
+ * 
+ * @author Yue Li 1251124
+ *
+ */
 
 public class Buffer {
 
 	public static Random RAN = new Random();
 	public static int THREAD_ID = 0;
-	public static int[] BUFFER_ITEM = new int[10];
+	public static int[] BUFFER_ITEM = new int[5];
+
+	public static Semaphore prod = new Semaphore(5);
+	public static Semaphore con = new Semaphore(0);
 
 	public Buffer() {
-		// INDEX = 0;
 	}
 
 	public static void insert_item(int element) {
-		boolean isInserted = false;
-		for (int i = 0; i < BUFFER_ITEM.length; i++) {
-			if (BUFFER_ITEM[i] == 0) {
-				BUFFER_ITEM[i] = element;
-				isInserted = true;
-				System.out.println("Inserted " + element + " at " + i);
-				break;
+		// boolean isInserted = false;
+		try {
+			prod.acquire();
+			for (int i = 0; i < BUFFER_ITEM.length; i++) {
+				if (BUFFER_ITEM[i] == 0) {
+					BUFFER_ITEM[i] = element;
+					// isInserted = true;
+					System.out.println("Inserted " + element + " at " + i);
+					break;
+				}
 			}
+			System.out.print("[");
+			for (int i = 0; i < BUFFER_ITEM.length - 1; i++) {
+				System.out.print(BUFFER_ITEM[i] + ", ");
+			}
+			System.out.println(BUFFER_ITEM[4] + "]");
+			// if (!isInserted)
+			// System.out.println("The queue is full");
+			con.release();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
-		if (!isInserted)
-			System.out.println("The queue is full");
 	}
 
+	/**
+	 * remove item for consumer threads. consumer class shall not acquire
+	 * resource until producer release the resource.
+	 */
 	public static int remove_item() {
 		int item = 0;
-		for (int i = 0; i < BUFFER_ITEM.length; i++) {
-			if (BUFFER_ITEM[i] != 0) {
-				item = BUFFER_ITEM[i];
-				BUFFER_ITEM[i] = 0;
-				System.out.println("removed " + item + " at " + i);
-				return item;
+		try {
+			con.acquire();
+			for (int i = 0; i < BUFFER_ITEM.length; i++) {
+				if (BUFFER_ITEM[i] != 0) {
+					item = BUFFER_ITEM[i];
+					BUFFER_ITEM[i] = 0;
+					System.out.println("removed " + item + " at " + i);
+					System.out.print("[");
+					for (int l = 0; l < BUFFER_ITEM.length - 1; l++) {
+						System.out.print(BUFFER_ITEM[l] + ", ");
+					}
+					prod.release();
+					System.out.println(BUFFER_ITEM[4] + "]");
+					return item;
+				}
 			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
-		System.out.println("The queue is empty");
 		return 0;
 	}
 
@@ -48,9 +83,9 @@ public class Buffer {
 
 			public void run() {
 				while (true) {
-					System.out.println("Prodcuder thread " + threadNum);
 					try {
-						sleep(Buffer.RAN.nextInt(10000));
+						sleep(Buffer.RAN.nextInt(1000));
+						System.out.println("Prodcuder thread " + threadNum);
 						int item = Buffer.RAN.nextInt(100) + 1;
 						Buffer.insert_item(item);
 					} catch (InterruptedException e) {
@@ -69,9 +104,9 @@ public class Buffer {
 
 			public void run() {
 				while (true) {
-					System.out.println("Consumer thread " + threadNum);
 					try {
-						sleep(Buffer.RAN.nextInt(10000));
+						sleep(Buffer.RAN.nextInt(1000));
+						System.out.println("Consumer thread " + threadNum);
 						Buffer.remove_item();
 					} catch (InterruptedException e) {
 						e.printStackTrace();
