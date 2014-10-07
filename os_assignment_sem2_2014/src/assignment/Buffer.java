@@ -15,9 +15,11 @@ public class Buffer {
 
 	public static Random RAN = new Random();
 	public static int THREAD_ID = 0;
+	// determine the length of the buffer
 	public static int[] BUFFER_ITEM = new int[5];
-
-	public static Semaphore prod = new Semaphore(5);
+	// determine the access of number of producers
+	public static Semaphore prod = new Semaphore(2);
+	// determine the access of number of consumers
 	public static Semaphore con = new Semaphore(0);
 
 	public Buffer() {
@@ -40,8 +42,6 @@ public class Buffer {
 				System.out.print(BUFFER_ITEM[i] + ", ");
 			}
 			System.out.println(BUFFER_ITEM[4] + "]");
-			// if (!isInserted)
-			// System.out.println("The queue is full");
 			con.release();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -77,14 +77,14 @@ public class Buffer {
 	}
 
 	public static void createProducerThread() {
-		System.out.println("T " + THREAD_ID++);
+		System.out.println("P " + THREAD_ID++);
 		Thread temp = new Thread() {
 			int threadNum = THREAD_ID;
 
 			public void run() {
 				while (true) {
 					try {
-						sleep(Buffer.RAN.nextInt(1000));
+						sleep(Buffer.RAN.nextInt(5000));
 						System.out.println("Prodcuder thread " + threadNum);
 						int item = Buffer.RAN.nextInt(100) + 1;
 						Buffer.insert_item(item);
@@ -105,7 +105,7 @@ public class Buffer {
 			public void run() {
 				while (true) {
 					try {
-						sleep(Buffer.RAN.nextInt(1000));
+						sleep(Buffer.RAN.nextInt(5000));
 						System.out.println("Consumer thread " + threadNum);
 						Buffer.remove_item();
 					} catch (InterruptedException e) {
@@ -185,6 +185,7 @@ public class Buffer {
 		}
 		// init threads end
 		try {
+			System.out.println("Main Thread start under sleeping");
 			Thread.sleep(duration * 1000);
 			System.exit(0);
 		} catch (InterruptedException e) {
